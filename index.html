@@ -13,9 +13,21 @@
 <!-- Fontes: serifa de personalidade para títulos, fonte técnica/mono para simular gravação a buril, e uma sans neutra para leitura -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Cutive+Mono&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,500&family=Cutive+Mono&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
 
 <link rel="stylesheet" href="style.css">
+
+<!-- Three.js via CDN (sem build tooling no projeto) para o objeto 3D das alianças no hero.
+     Usar o build minificado: three.module.js tem 1,27 MB, o .min tem 670 KB. -->
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 </head>
 <body>
 
@@ -24,7 +36,10 @@
 
 <header class="site-header">
   <a href="#hero" class="brand">
-    <img src="img/logo.png" alt="Dízer Alianças" class="brand-logo">
+    <picture>
+      <source srcset="img/logo.webp" type="image/webp">
+      <img src="img/logo.png" alt="Dízer Alianças" class="brand-logo" width="151" height="48">
+    </picture>
   </a>
   <div class="header-actions">
     <a
@@ -75,13 +90,14 @@
         muted
         loop
         playsinline
-        preload="auto"
+        preload="metadata"
       >
         <source src="video/aliancas-hero.mp4" type="video/mp4">
       </video>
       <div class="hero-video-overlay"></div>
     </div>
 
+    <div class="hero-content-row">
     <div class="hero-inner">
       <p class="eyebrow">Fabricação própria · João Pessoa · desde 2005</p>
 
@@ -115,6 +131,12 @@
         <svg width="14" height="20" viewBox="0 0 14 20" fill="none"><path d="M7 1V19M7 19L1 13M7 19L13 13" stroke="currentColor" stroke-width="1"/></svg>
       </a>
     </div>
+
+    <!-- Objeto 3D das alianças (ouro 18K, Three.js), visível a partir de telas médias/grandes -->
+    <div class="hero-3d" aria-hidden="true">
+      <canvas id="hero3dCanvas"></canvas>
+    </div>
+    </div>
   </section>
 
   <!-- ======================================================
@@ -141,12 +163,15 @@
 
       <div class="metal-visual-col">
         <div class="metal-visual cursor-target" id="magnifyTarget">
-          <img
+          <picture>
+            <source srcset="img/ouro-caixa-aliancas.webp" type="image/webp">
+            <img
             src="img/ouro-caixa-aliancas.jpg"
             alt="Par de alianças Dízer em ouro 18K, na caixinha da marca"
             id="magnifyImage"
             draggable="false"
           >
+          </picture>
           <div class="magnify-lens" id="magnifyLens" aria-hidden="true"></div>
         </div>
         <p class="image-caption">ouro 18K · acabamento de fábrica</p>
@@ -200,21 +225,30 @@
     <div class="couples-gallery">
       <figure class="couple-card">
         <div class="couple-img-wrap">
-          <img class="parallax-img" src="img/casal-alianca-colagem.jpg" alt="Alianças Dízer em ouro 18K, gravadas com o nome do casal" loading="lazy">
+          <picture>
+            <source srcset="img/casal-alianca-colagem.webp" type="image/webp">
+            <img class="parallax-img" src="img/casal-alianca-colagem.jpg" alt="Alianças Dízer em ouro 18K, gravadas com o nome do casal" loading="lazy">
+          </picture>
         </div>
         <figcaption class="image-caption">ouro 18K · caixa Dízer Alianças</figcaption>
       </figure>
 
       <figure class="couple-card offset">
         <div class="couple-img-wrap">
-          <img class="parallax-img" src="img/casal-biblia.jpg" alt="Mãos de um casal com alianças Dízer, sobre a Bíblia" loading="lazy">
+          <picture>
+            <source srcset="img/casal-biblia.webp" type="image/webp">
+            <img class="parallax-img" src="img/casal-biblia.jpg" alt="Mãos de um casal com alianças Dízer, sobre a Bíblia" loading="lazy">
+          </picture>
         </div>
         <figcaption class="image-caption">alianças que atravessam uma vida</figcaption>
       </figure>
 
       <figure class="couple-card">
         <div class="couple-img-wrap">
-          <img class="parallax-img" src="img/casal-flores.jpg" alt="Mãos de um casal com alianças Dízer, entre flores" loading="lazy">
+          <picture>
+            <source srcset="img/casal-flores.webp" type="image/webp">
+            <img class="parallax-img" src="img/casal-flores.jpg" alt="Mãos de um casal com alianças Dízer, entre flores" loading="lazy">
+          </picture>
         </div>
         <figcaption class="image-caption">ouro 18K · feito à mão, na fábrica</figcaption>
       </figure>
@@ -285,7 +319,10 @@
 </main>
 
 <footer class="site-footer">
-  <img src="img/logo.png" alt="Dízer Alianças" class="footer-logo">
+  <picture>
+    <source srcset="img/logo.webp" type="image/webp">
+    <img src="img/logo.png" alt="Dízer Alianças" class="footer-logo" width="76" height="84">
+  </picture>
   <p>Ouro 18K · fabricação própria · João Pessoa (PB) · atendimento por hora marcada</p>
   <a
     class="footer-instagram"
@@ -303,5 +340,6 @@
 </footer>
 
 <script src="script.js"></script>
+<script type="module" src="hero3d.js"></script>
 </body>
 </html>

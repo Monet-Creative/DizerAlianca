@@ -205,7 +205,16 @@
     if (!target || !image || !lens) return;
 
     var ZOOM = 2.2;
-    lens.style.backgroundImage = 'url(' + image.src + ')';
+    // currentSrc é o arquivo que o <picture> realmente escolheu (WebP quando há
+    // suporte); usar .src baixaria o JPEG de fallback uma segunda vez
+    function setLensImage() {
+      lens.style.backgroundImage = 'url(' + (image.currentSrc || image.src) + ')';
+    }
+    if (image.complete) {
+      setLensImage();
+    } else {
+      image.addEventListener('load', setLensImage, { once: true });
+    }
 
     function moveLens(clientX, clientY) {
       var rect = target.getBoundingClientRect();
