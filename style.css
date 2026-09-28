@@ -697,6 +697,60 @@ section {
   color: var(--gold);
 }
 
+.site-footer {
+  position: relative;
+}
+.site-footer .footer-credit {
+  position: absolute;
+  right: clamp(20px, 6vw, 64px);
+  bottom: 20px;
+  display: flex;
+  align-items: baseline;
+  gap: 0.4em;
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  padding-bottom: 5px;
+  color: var(--ink-muted);
+  border-bottom: none;
+  opacity: 0.85;
+  transition: opacity 0.25s ease, color 0.25s ease;
+}
+/* sublinhado dourado que cresce da esquerda para a direita no hover */
+.footer-credit::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: var(--gold);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.site-footer .footer-credit:hover,
+.site-footer .footer-credit:focus-visible {
+  opacity: 1;
+  color: var(--gold);
+}
+.footer-credit:hover::after,
+.footer-credit:focus-visible::after {
+  transform: scaleX(1);
+}
+/* altura da logo = altura das maiúsculas do texto ao lado; inline-block faz a
+   base da imagem pousar na linha de base do texto */
+.footer-credit img {
+  height: 0.72em;
+  width: auto;
+  display: inline-block;
+  transition: filter 0.25s ease;
+}
+.footer-credit:hover img,
+.footer-credit:focus-visible img {
+  filter: brightness(1.25) drop-shadow(0 0 6px rgba(255, 255, 255, 0.25));
+}
+
 /* ---------------------------------------------------------
    Acessibilidade: respeita usuários que pedem menos movimento
 --------------------------------------------------------- */

@@ -1,5 +1,5 @@
-// Objeto 3D das alianças no hero: duas alianças em ouro 18K (Three.js),
-// renderizadas sobre canvas transparente por cima do vídeo/fundo do hero.
+// Objeto 3D do hero: anel solitário em ouro 18K com diamante (Three.js),
+// renderizado sobre canvas transparente por cima do vídeo/fundo do hero.
 //
 // Carregamento e custo: o Three.js só é baixado quando o canvas existe, cabe na
 // tela (no mobile o .hero-3d é display:none) e o usuário não pediu menos
@@ -41,9 +41,10 @@ if (document.readyState === 'complete') {
 }
 
 async function init() {
-  const [THREE, { RoomEnvironment }] = await Promise.all([
+  const [THREE, { RoomEnvironment }, { mergeGeometries }] = await Promise.all([
     import('three'),
     import('three/addons/environments/RoomEnvironment.js'),
+    import('three/addons/utils/BufferGeometryUtils.js'),
   ]);
 
   const container = canvas.parentElement;
@@ -82,35 +83,41 @@ async function init() {
     envMapIntensity: 1.7,
   });
 
-  function makeRing(radius, tube) {
-    const geometry = new THREE.TorusGeometry(radius, tube, 24, 128);
-    return new THREE.Mesh(geometry, goldMaterial);
-  }
+  // Diamante sem transmission: com o canvas transparente não haveria o que
+  // refratar atrás da pedra. O contraste claro/escuro da lapidação vem das cores
+  // por faceta (ver buildSolitaire), o reflexo do ambiente dá o brilho e a
+  // iridescência imita o "fogo".
+  const diamondMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    vertexColors: true,
+    metalness: 0.45,
+    roughness: 0.0,
+    ior: 2.42,
+    envMapIntensity: 2.8,
+    iridescence: 0.6,
+    iridescenceIOR: 2.0,
+    iridescenceThicknessRange: [120, 420],
+    flatShading: true,
+  });
 
-  // Grupo interno: pose fixa das alianças realmente entrelaçadas.
-  // Enlace topológico: os dois anéis têm centros separados por D no eixo X e planos
-  // inclinados um em relação ao outro em torno desse mesmo eixo X. Assim o anel B
-  // cruza o plano do anel A em exatamente dois pontos — um dentro do furo de A
-  // (D - RB = 0.02) e outro fora (D + RB = 1.18) —, que é a condição de enlace.
-  const RING_GAP = 0.6;
+  const { geometry: goldGeometry, diamond: diamondGeometry } = buildSolitaire(THREE, mergeGeometries);
 
-  const ringsInner = new THREE.Group();
+  // centraliza a peça na origem, que é o pivô da rotação livre
+  goldGeometry.computeBoundingBox();
+  const center = goldGeometry.boundingBox.getCenter(new THREE.Vector3());
+  goldGeometry.translate(-center.x, -center.y, -center.z);
+  diamondGeometry.translate(-center.x, -center.y, -center.z);
 
-  const ringBack = makeRing(0.62, 0.12);
-  ringBack.position.set(-RING_GAP / 2, 0, 0);
-  ringsInner.add(ringBack);
+  const ringInner = new THREE.Group();
+  ringInner.add(new THREE.Mesh(goldGeometry, goldMaterial));
+  ringInner.add(new THREE.Mesh(diamondGeometry, diamondMaterial));
 
-  const ringFront = makeRing(0.58, 0.105);
-  ringFront.rotation.x = 1.15; // inclinação em torno do eixo que liga os dois centros
-  ringFront.position.set(RING_GAP / 2, 0, 0);
-  ringsInner.add(ringFront);
-
-  // pose inicial de apresentação (3/4) do par já entrelaçado
-  ringsInner.rotation.set(-0.5, -0.5, 0.22);
+  // pose inicial de apresentação (3/4, olhando levemente de cima para a pedra)
+  ringInner.rotation.set(0.62, 0.95, -0.1);
 
   // grupo externo: recebe a rotação livre do usuário (arrastar com mouse/toque)
   const ringGroup = new THREE.Group();
-  ringGroup.add(ringsInner);
+  ringGroup.add(ringInner);
   scene.add(ringGroup);
 
   // Duas luzes apenas. Cada luz dinâmica entra no shader de todo pixel, e em
@@ -121,27 +128,25 @@ async function init() {
   key.position.set(3.5, 5, 4);
   scene.add(key);
 
-  // contraluz que desenha o contorno das alianças sobre o fundo escuro
+  // contraluz que desenha o contorno do anel sobre o fundo escuro
   const rim = new THREE.DirectionalLight(0xffe2a8, 3.0);
   rim.position.set(-1.5, 2.5, -5);
   scene.add(rim);
 
-  // Raio da esfera que envolve o par de alianças, medido a partir da origem.
-  // Como o usuário gira o objeto em torno dessa origem, usar a esfera (e não a
-  // caixa) garante que nenhuma pose corte nas laterais do canvas.
-  const bounds = new THREE.Box3().setFromObject(ringsInner);
+  // Raio da esfera que envolve o anel, medido a partir da origem (o pivô).
+  // Distância é invariante à rotação, então nenhuma pose da rotação livre corta
+  // nas laterais do canvas — e medir nos vértices dá o menor raio possível.
   let boundingRadius = 0;
-  for (const x of [bounds.min.x, bounds.max.x]) {
-    for (const y of [bounds.min.y, bounds.max.y]) {
-      for (const z of [bounds.min.z, bounds.max.z]) {
-        boundingRadius = Math.max(boundingRadius, Math.hypot(x, y, z));
-      }
+  for (const geometry of [goldGeometry, diamondGeometry]) {
+    const pos = geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      boundingRadius = Math.max(boundingRadius, Math.hypot(pos.getX(i), pos.getY(i), pos.getZ(i)));
     }
   }
 
-  // 1.0 = a esfera envolvente encosta exatamente nas bordas do canvas: é o maior
-  // tamanho possível que ainda garante que nenhuma pose da rotação livre corte
-  const FIT_MARGIN = 1.0;
+  // 1.0 = a esfera envolvente encosta exatamente nas bordas do canvas (maior
+  // tamanho sem corte em nenhuma pose); acima disso sobra respiro em volta
+  const FIT_MARGIN = 1.2;
 
   // Estado do loop sob demanda. Declarado antes de resize() porque o primeiro
   // resize() já chama requestRender(), que lê estas variáveis.
@@ -300,4 +305,194 @@ async function init() {
   }
 
   requestRender();
+}
+
+// ---- modelagem do solitário ----
+// Eixo do dedo = Z, pedra apontando para +Y. Todas as partes de ouro são fundidas
+// em uma única geometria (um draw call só).
+function buildSolitaire(THREE, mergeGeometries) {
+  const BAND_RC = 0.835; // raio do centro do aro
+  const BAND_HALF_T = 0.035; // meia espessura radial do aro
+  const BAND_HALF_W = 0.1; // meia largura do aro (ao longo do dedo)
+
+  // Ombros em "catedral": uma segunda faixa sobe do aro até a cabeça, e o vão
+  // entre ela e o aro é vazado por uma treliça em X nas duas laterais.
+  const ARCH_SPAN = 0.95; // ângulo (rad, a partir do topo) onde o arco nasce do aro
+  const ARCH_RISE = 0.24;
+  const ARCH_HALF_T = 0.03; // um pouco menor que o aro: as pontas somem dentro dele
+  const ARCH_HALF_W = 0.095;
+  const archHeight = (phi) =>
+    Math.abs(phi) >= ARCH_SPAN ? 0 : ARCH_RISE * 0.5 * (1 + Math.cos((Math.PI * phi) / ARCH_SPAN));
+
+  const STONE_R = 0.25;
+  const GIRDLE_Y = 1.345;
+  const CROWN_H = 0.08;
+  const PAVILION_D = 0.215;
+
+  const polar = (r, phi) => new THREE.Vector3(r * Math.sin(phi), r * Math.cos(phi), 0);
+
+  // perfil de retângulo arredondado (superelipse), em (u = normal, v = eixo Z)
+  function roundedProfile(halfU, halfV, count = 32) {
+    const pts = [];
+    for (let k = 0; k < count; k++) {
+      const t = (k / count) * Math.PI * 2;
+      const c = Math.cos(t);
+      const s = Math.sin(t);
+      pts.push([halfU * Math.sign(c) * Math.sqrt(Math.abs(c)), halfV * Math.sign(s) * Math.sqrt(Math.abs(s))]);
+    }
+    return pts;
+  }
+
+  // varre um perfil ao longo de uma curva plana no plano XY; a normal do perfil
+  // é a perpendicular da tangente, então não há torção como no Frenet do Three
+  function sweep(pathAt, steps, closed, profile) {
+    const positions = [];
+    const indices = [];
+    const rows = closed ? steps : steps + 1;
+    const eps = 1e-4;
+    for (let i = 0; i < rows; i++) {
+      const t = i / steps;
+      const p = pathAt(t);
+      const tan = pathAt(t + eps).sub(pathAt(t - eps)).normalize();
+      const nx = -tan.y;
+      const ny = tan.x;
+      for (const [u, v] of profile) {
+        positions.push(p.x + nx * u, p.y + ny * u, v);
+      }
+    }
+    const P = profile.length;
+    for (let i = 0; i < steps; i++) {
+      const i2 = closed ? (i + 1) % steps : i + 1;
+      for (let j = 0; j < P; j++) {
+        const j2 = (j + 1) % P;
+        const a = i * P + j;
+        const b = i2 * P + j;
+        const c = i2 * P + j2;
+        const d = i * P + j2;
+        indices.push(a, d, b, b, d, c);
+      }
+    }
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+    geometry.setIndex(indices);
+    geometry.computeVertexNormals();
+    return geometry;
+  }
+
+  function strut(a, b, radius) {
+    const dir = new THREE.Vector3().subVectors(b, a);
+    const length = dir.length() + radius * 2; // pontas embutidas nas faixas
+    const geometry = new THREE.CylinderGeometry(radius, radius, length, 8, 1);
+    geometry.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize()));
+    geometry.translate((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
+    return geometry;
+  }
+
+  const parts = [];
+
+  // aro
+  parts.push(sweep((t) => polar(BAND_RC, t * Math.PI * 2), 160, true, roundedProfile(BAND_HALF_T, BAND_HALF_W)));
+
+  // arco da catedral
+  parts.push(
+    sweep(
+      (t) => {
+        const phi = (t * 2 - 1) * ARCH_SPAN;
+        return polar(BAND_RC + archHeight(phi), phi);
+      },
+      80,
+      false,
+      roundedProfile(ARCH_HALF_T, ARCH_HALF_W),
+    ),
+  );
+
+  // treliça em X entre o aro e o arco, dos dois lados da cabeça e nas duas faces
+  const LATTICE_FROM = 0.13;
+  const LATTICE_TO = 0.6 * ARCH_SPAN;
+  const CELLS = 3;
+  const bandTop = BAND_RC + BAND_HALF_T - 0.006;
+  for (const side of [-1, 1]) {
+    for (const z of [-0.072, 0.072]) {
+      for (let i = 0; i < CELLS; i++) {
+        const p0 = side * (LATTICE_FROM + ((LATTICE_TO - LATTICE_FROM) * i) / CELLS);
+        const p1 = side * (LATTICE_FROM + ((LATTICE_TO - LATTICE_FROM) * (i + 1)) / CELLS);
+        const low0 = polar(bandTop, p0).setZ(z);
+        const low1 = polar(bandTop, p1).setZ(z);
+        const high0 = polar(BAND_RC + archHeight(p0) - ARCH_HALF_T + 0.006, p0).setZ(z);
+        const high1 = polar(BAND_RC + archHeight(p1) - ARCH_HALF_T + 0.006, p1).setZ(z);
+        parts.push(strut(low0, high1, 0.013), strut(high0, low1, 0.013));
+      }
+    }
+  }
+
+  // cabeça: seis garras presas por duas galerias circulares
+  const GALLERY = [
+    { r: 0.12, y: 1.16 },
+    { r: 0.21, y: 1.28 },
+  ];
+  for (const { r, y } of GALLERY) {
+    const ring = new THREE.TorusGeometry(r, 0.02, 12, 48);
+    ring.rotateX(Math.PI / 2);
+    ring.translate(0, y, 0);
+    parts.push(ring);
+  }
+
+  const PRONG_R = 0.028;
+  const prongProfile = [
+    [0.05, 1.05],
+    [GALLERY[0].r, GALLERY[0].y],
+    [GALLERY[1].r, GALLERY[1].y],
+    [STONE_R + 0.022, GIRDLE_Y],
+    [STONE_R + 0.012, GIRDLE_Y + 0.05],
+    [STONE_R * 0.9, GIRDLE_Y + 0.075],
+  ];
+  for (let k = 0; k < 6; k++) {
+    const theta = (k / 6) * Math.PI * 2 + Math.PI / 6;
+    const cx = Math.cos(theta);
+    const cz = Math.sin(theta);
+    const points = prongProfile.map(([r, y]) => new THREE.Vector3(r * cx, y, r * cz));
+    parts.push(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 32, PRONG_R, 10, false));
+    const tip = new THREE.SphereGeometry(PRONG_R * 1.15, 12, 8);
+    const end = points[points.length - 1];
+    tip.translate(end.x, end.y, end.z);
+    parts.push(tip);
+  }
+
+  for (const part of parts) part.deleteAttribute('uv');
+  const geometry = mergeGeometries(parts);
+  for (const part of parts) part.dispose();
+
+  // brilhante redondo: coroa (mesa + quebra), cinta e pavilhão com quebra das
+  // facetas inferiores; 16 segmentos com flat shading viram as facetas
+  const profile = [
+    new THREE.Vector2(0, GIRDLE_Y - PAVILION_D),
+    new THREE.Vector2(STONE_R * 0.62, GIRDLE_Y - PAVILION_D * 0.45),
+    new THREE.Vector2(STONE_R, GIRDLE_Y - 0.008),
+    new THREE.Vector2(STONE_R, GIRDLE_Y + 0.008),
+    new THREE.Vector2(STONE_R * 0.8, GIRDLE_Y + CROWN_H * 0.55),
+    new THREE.Vector2(STONE_R * 0.57, GIRDLE_Y + CROWN_H),
+    new THREE.Vector2(0, GIRDLE_Y + CROWN_H),
+  ];
+  const SEGMENTS = 16;
+  const diamond = new THREE.LatheGeometry(profile, SEGMENTS).toNonIndexed();
+
+  // Sem refração, a mesa e as facetas ficariam de um tom só. Alternar facetas
+  // claras e escuras reproduz o padrão de "setas" que o pavilhão projeta através
+  // da mesa num brilhante real; algumas facetas levam um tom frio ou quente.
+  const rowsPerSegment = profile.length - 1;
+  const triangles = diamond.attributes.position.count / 3;
+  const colors = new Float32Array(triangles * 9);
+  const tint = new THREE.Color();
+  for (let k = 0; k < triangles; k++) {
+    const segment = Math.floor(k / (2 * rowsPerSegment));
+    const row = Math.floor((k % (2 * rowsPerSegment)) / 2);
+    const bright = (segment + row) % 2 === 0;
+    tint.setRGB(1, 1, 1).multiplyScalar(bright ? 1 : 0.18);
+    if (bright && segment % 5 === 1) tint.setRGB(0.82, 0.9, 1);
+    if (bright && segment % 7 === 3) tint.setRGB(1, 0.93, 0.8);
+    for (let v = 0; v < 3; v++) tint.toArray(colors, k * 9 + v * 3);
+  }
+  diamond.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  return { geometry, diamond };
 }
