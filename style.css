@@ -1,0 +1,681 @@
+/* =========================================================
+   DÍZER ALIANÇAS — estilos
+   Fundo escuro, ouro usado só em traços finos/bordas,
+   grid assimétrico, espaçamento generoso entre seções.
+   ========================================================= */
+
+:root {
+  /* Cores base */
+  --bg: #0b0b0c;
+  --bg-alt: #111318;
+  --ink: #ece7df;          /* quase-branco quente, não branco puro */
+  --ink-muted: #9a978f;
+
+  /* Ouro: usado com economia — traços de 1px, bordas, texto de destaque.
+     Hue mantido entre 22–38 conforme direção visual. */
+  --gold: hsl(36 48% 58%);
+  --gold-dim: hsl(36 30% 40%);
+  --gold-line: hsla(36, 48%, 58%, 0.35);
+
+  /* Cor secundária de contraste, usada raramente */
+  --accent: hsl(160 40% 24%);
+  --accent-line: hsla(160, 45%, 55%, 0.35);
+
+  /* Tipografia */
+  --font-serif: 'Fraunces', Georgia, serif;
+  --font-sans: 'Manrope', -apple-system, sans-serif;
+  --font-engrave: 'Cutive Mono', monospace;
+
+  /* Espaçamento entre seções */
+  --section-space: 160px;
+}
+
+@media (max-width: 720px) {
+  :root { --section-space: 96px; }
+}
+
+* { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  width: 100%;
+  /* textura sutil de ruído para o fundo não ficar chapado */
+  background-image:
+    radial-gradient(circle at 15% 10%, rgba(255,255,255,0.03), transparent 40%),
+    radial-gradient(circle at 85% 60%, rgba(255,255,255,0.025), transparent 45%);
+}
+
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+ul { list-style: none; margin: 0; padding: 0; }
+
+::selection {
+  background: var(--gold-line);
+  color: var(--ink);
+}
+
+/* Esconde o cursor padrão só quando o cursor customizado está ativo (classe no body via JS) */
+body.custom-cursor-active .cursor-target,
+body.custom-cursor-active .cursor-target * {
+  cursor: none;
+}
+
+/* ---------------------------------------------------------
+   CURSOR CUSTOMIZADO — traço/brilho dourado (desktop only)
+--------------------------------------------------------- */
+.gold-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0;
+  transform: translate3d(-100px, -100px, 0) scale(0.7);
+  transition: opacity 0.25s ease, transform 0.12s ease-out, border-color 0.2s ease;
+  box-shadow: 0 0 12px 1px hsla(36, 48%, 58%, 0.35);
+}
+.gold-cursor.is-visible { opacity: 1; }
+.gold-cursor.is-active { transform: translate3d(-100px, -100px, 0) scale(1.4); }
+
+/* ---------------------------------------------------------
+   HEADER
+--------------------------------------------------------- */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px clamp(20px, 5vw, 56px);
+  background: linear-gradient(to bottom, rgba(11,11,12,0.85), rgba(11,11,12,0));
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+}
+.brand-logo {
+  height: 48px;
+  width: auto;
+  display: block;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header-whatsapp {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+  border-bottom: 1px solid var(--gold-line);
+  padding-bottom: 2px;
+}
+.header-whatsapp .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  display: inline-block;
+}
+
+.header-instagram {
+  display: flex;
+  color: var(--ink-muted);
+  transition: color 0.2s ease;
+}
+.header-instagram:hover {
+  color: var(--gold);
+}
+
+/* ---------------------------------------------------------
+   Elementos comuns de seção
+--------------------------------------------------------- */
+section {
+  padding: var(--section-space) clamp(20px, 6vw, 64px);
+  position: relative;
+}
+
+.section-head {
+  max-width: 640px;
+  margin-bottom: 64px;
+}
+
+.section-kicker {
+  font-family: var(--font-engrave);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  margin: 0 0 16px;
+}
+
+.section-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+  line-height: 1.2;
+  margin: 0 0 20px;
+  color: var(--ink);
+}
+
+.section-copy {
+  font-size: 1.02rem;
+  color: var(--ink);
+  max-width: 52ch;
+  margin: 0 0 10px;
+}
+.section-copy.muted { color: var(--ink-muted); }
+
+/* ---------------------------------------------------------
+   1. HERO
+--------------------------------------------------------- */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding-top: 120px;
+  padding-bottom: 80px;
+  border-bottom: 1px solid var(--gold-line);
+  overflow: hidden;
+}
+
+/* ---- vídeo de fundo: duas alianças lançadas se encontrando no ar ---- */
+.hero-video-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.hero-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: translate(-50%, -50%);
+}
+
+/* escurece o vídeo para o texto continuar legível por cima */
+.hero-video-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, hsla(0, 0%, 4%, 0.75), hsla(0, 0%, 4%, 0.55) 45%, hsla(0, 0%, 4%, 0.92)),
+    radial-gradient(circle at 15% 10%, rgba(255,255,255,0.03), transparent 40%);
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  width: 100%;
+  /* evita o bug clássico de flex-item que não encolhe abaixo do
+     conteúdo (min-width:auto padrão), o que empurraria o texto
+     para fora da tela no mobile */
+  min-width: 0;
+}
+
+.eyebrow {
+  font-family: var(--font-engrave);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 28px;
+}
+
+.hero-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: clamp(2.4rem, 7vw, 5.2rem);
+  line-height: 1.08;
+  margin: 0 0 32px;
+  min-height: 1.2em;
+}
+
+/* cada palavra é um wrapper que não quebra por dentro; a linha só
+   pode quebrar no espaço entre palavras, nunca no meio de uma letra */
+.hero-title .word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+/* cada letra do título é injetada como span pelo JS, para animar a "gravação" */
+.hero-title .letter {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(4px);
+  transform: translateY(0.3em);
+  animation: engraveIn 0.55s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+}
+@keyframes engraveIn {
+  0% { opacity: 0; filter: blur(4px); transform: translateY(0.25em); }
+  60% { opacity: 1; filter: blur(0.5px); }
+  100% { opacity: 1; filter: blur(0); transform: translateY(0); }
+}
+
+.hero-subtitle {
+  font-size: clamp(1rem, 1.6vw, 1.15rem);
+  color: var(--ink-muted);
+  max-width: 46ch;
+  margin: 0 0 56px;
+}
+
+/* Bloco de CTA do hero: substitui o campo de texto da gravação
+   por um convite direto de ação — o objetivo real da página. */
+.hero-cta-block {
+  margin-bottom: 12px;
+}
+
+.hero-cta {
+  margin-bottom: 18px;
+}
+
+.hero-cta-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex-shrink: 0;
+  animation: liveDotPulse 1.6s ease-in-out infinite;
+}
+@keyframes liveDotPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.7); }
+}
+
+.hero-scroll-cue {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--gold);
+  margin-top: 12px;
+}
+.hero-scroll-cue svg { color: var(--gold); animation: bob 2.2s ease-in-out infinite; }
+@keyframes bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+/* ---------------------------------------------------------
+   2. O METAL — grid assimétrico + lupa
+--------------------------------------------------------- */
+.metal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: clamp(32px, 6vw, 96px);
+  align-items: center;
+}
+@media (max-width: 860px) {
+  .metal-grid { grid-template-columns: 1fr; }
+}
+
+.metal-facts {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.metal-facts li {
+  font-size: 0.95rem;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--gold-line);
+  padding-top: 14px;
+}
+.metal-facts li span {
+  font-family: var(--font-serif);
+  color: var(--gold);
+  font-size: 1.1rem;
+  margin-right: 8px;
+}
+
+.metal-visual {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--gold-line);
+  border-radius: 10px;
+}
+.metal-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  aspect-ratio: 4 / 5;
+  user-select: none;
+}
+
+/* legenda de foto: sempre abaixo do campo de imagem, nunca por
+   cima dela — usada na foto do Metal e nas fotos dos casais */
+.image-caption {
+  margin: 12px 0 0;
+  font-family: var(--font-engrave);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-muted);
+}
+
+.magnify-lens {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  border: 1px solid var(--gold);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.5);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  background-repeat: no-repeat;
+}
+.magnify-lens.is-active { opacity: 1; }
+
+/* ---------------------------------------------------------
+   4. LINHA DO TEMPO
+--------------------------------------------------------- */
+.timeline {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
+}
+@media (max-width: 860px) {
+  .timeline { grid-template-columns: 1fr; gap: 48px; }
+}
+
+.timeline-track {
+  position: absolute;
+  top: 8px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--gold-line);
+}
+@media (max-width: 860px) {
+  .timeline-track { top: 0; bottom: 0; left: 8px; right: auto; width: 1px; height: auto; }
+}
+
+.timeline-item {
+  position: relative;
+  padding-top: 32px;
+}
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--gold);
+}
+@media (max-width: 860px) {
+  .timeline-item { padding-top: 0; padding-left: 32px; }
+  .timeline-item::before { top: 4px; left: 4px; }
+}
+
+.timeline-year {
+  display: block;
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--gold);
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+}
+
+.timeline-text {
+  font-size: 0.92rem;
+  color: var(--ink-muted);
+  margin: 0;
+}
+
+/* revelação no scroll (classe .in-view aplicada via IntersectionObserver) */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---------------------------------------------------------
+   5. CASAIS REAIS — galeria com parallax
+--------------------------------------------------------- */
+.couples-section {
+  /* mesmo fundo "quente" das outras seções alternadas (--bg-alt),
+     com um brilho âmbar bem sutil — sem isso a seção fica preta
+     chapada e destoa do resto da página */
+  background:
+    radial-gradient(circle at 18% 20%, hsla(36, 55%, 50%, 0.07), transparent 45%),
+    radial-gradient(circle at 88% 80%, hsla(36, 55%, 50%, 0.05), transparent 50%),
+    var(--bg-alt);
+}
+
+.couples-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(24px, 4vw, 40px);
+}
+@media (max-width: 860px) {
+  .couples-gallery { grid-template-columns: 1fr; gap: 32px; }
+}
+
+.couple-card {
+  margin: 0;
+}
+.couple-card.offset {
+  margin-top: 64px;
+}
+@media (max-width: 860px) {
+  .couple-card.offset { margin-top: 0; }
+}
+
+.couple-img-wrap {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--gold-line);
+  border-radius: 10px;
+  aspect-ratio: 4 / 5;
+}
+
+.parallax-img {
+  width: 100%;
+  height: 130%;
+  object-fit: cover;
+  transform: translateY(0);
+  will-change: transform;
+}
+
+/* ---------------------------------------------------------
+   6. COMO FUNCIONA — passos revelados no scroll
+--------------------------------------------------------- */
+.steps {
+  position: relative;
+  max-width: 620px;
+  margin-left: clamp(0px, 4vw, 40px);
+  display: flex;
+  flex-direction: column;
+  gap: 88px;
+  padding-left: 48px;
+}
+
+.steps-line {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 0;
+  width: 2px;
+  height: auto;
+  overflow: visible;
+}
+.steps-line line { stroke: var(--gold-line); stroke-width: 2; }
+.steps-line-fill { stroke: var(--gold) !important; transition: y2 0.1s linear; }
+
+.step {
+  position: relative;
+}
+.step-index {
+  position: absolute;
+  left: -48px;
+  top: -2px;
+  font-family: var(--font-engrave);
+  font-size: 0.75rem;
+  color: var(--gold);
+  background: var(--bg);
+  padding-right: 8px;
+}
+.step h3 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: 1.4rem;
+  margin: 0 0 10px;
+}
+.step p {
+  color: var(--ink-muted);
+  margin: 0;
+  max-width: 46ch;
+}
+
+/* ---------------------------------------------------------
+   7. CONTATO / FECHAMENTO
+--------------------------------------------------------- */
+.contact-section {
+  background: var(--bg-alt);
+  border-top: 1px solid var(--gold-line);
+  text-align: center;
+}
+.contact-inner {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.contact-title {
+  font-style: italic;
+}
+.contact-title span {
+  color: var(--gold);
+  font-family: var(--font-engrave);
+  font-style: normal;
+  font-size: 0.75em;
+  letter-spacing: 0.02em;
+}
+.contact-section .section-copy { margin: 0 auto 40px; }
+
+.whatsapp-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 32px;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-size: 0.95rem;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.whatsapp-cta:hover {
+  background: var(--gold);
+  color: var(--bg);
+}
+
+/* ---------------------------------------------------------
+   FOOTER
+--------------------------------------------------------- */
+.site-footer {
+  padding: 48px clamp(20px, 6vw, 64px) 64px;
+  text-align: center;
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+  border-top: 1px solid var(--gold-line);
+}
+.footer-logo {
+  height: 84px;
+  width: auto;
+  margin: 0 auto 10px;
+  display: block;
+}
+.site-footer a {
+  display: inline-block;
+  margin-top: 10px;
+  color: var(--gold);
+  border-bottom: 1px solid var(--gold-line);
+}
+
+.footer-instagram {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 18px;
+  color: var(--ink-muted);
+  border-bottom: none;
+  transition: color 0.2s ease;
+}
+.footer-instagram:hover {
+  color: var(--gold);
+}
+
+/* ---------------------------------------------------------
+   Acessibilidade: respeita usuários que pedem menos movimento
+--------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .hero-title .letter,
+  .reveal,
+  .hero-scroll-cue svg,
+  .live-dot {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  /* sem vídeo em autoplay para quem pediu menos movimento — fica só
+     o fundo escuro com o overlay, que já é o estado de "sem vídeo" */
+  .hero-video {
+    display: none;
+  }
+}
